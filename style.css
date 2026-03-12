@@ -1,0 +1,584 @@
+/* ========================================
+   Cockpit PatternFly 6 Styling
+   Cloudflare Tunnel Monitor
+   ======================================== */
+
+/* Hide custom theme toggle - Cockpit handles theming */
+.theme-toggle {
+    display: none !important;
+}
+
+/* Base body styling */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "RedHatText", "Overpass", overpass, helvetica, arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    /* Use CSS variables for dark mode support, with light mode fallbacks */
+    color: var(--pf-v6-global--Color--100, #151515);
+    background-color: var(--pf-v6-global--BackgroundColor--100, #f0f0f0);
+}
+
+/* Main page section wrapper */
+.pf-v6-c-page__main-section {
+    padding: 24px;
+    background-color: var(--pf-v6-global--BackgroundColor--100, #f0f0f0);
+}
+
+/* Card component - main container */
+.pf-v6-c-card {
+    background-color: var(--pf-v6-global--BackgroundColor--200, #ffffff);
+    box-shadow: 0 2px 4px rgba(3, 3, 3, 0.12), 0 0 2px rgba(3, 3, 3, 0.06);
+    border-radius: 8px;
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+
+/* Card title section */
+.pf-v6-c-card__title {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--pf-v6-global--BorderColor--100, #d2d2d2);
+    display: flex;
+    align-items: center;
+    background-color: var(--pf-v6-global--BackgroundColor--200, #ffffff);
+}
+
+.pf-v6-c-card__title-text {
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--pf-v6-global--Color--100, #151515);
+    margin: 0;
+    flex: 1;
+}
+
+/* Card body section */
+.pf-v6-c-card__body {
+    padding: 24px;
+}
+
+/* Description list for status info (Cockpit Overview style) */
+.pf-v6-c-description-list {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.pf-v6-c-description-list.pf-m-horizontal {
+    grid-template-columns: auto 1fr;
+    row-gap: 12px;
+    column-gap: 24px;
+}
+
+.pf-v6-c-description-list__term {
+    font-weight: 600;
+    color: var(--pf-v6-global--Color--200, #6a6e73);
+    font-size: 13px;
+    padding-top: 2px;
+}
+
+.pf-v6-c-description-list__description {
+    color: var(--pf-v6-global--Color--100, #151515);
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* Stats container - metrics display */
+.stat-container {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    min-width: 100px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--pf-v6-global--Color--200, #6a6e73);
+    margin-bottom: 4px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--pf-v6-global--Color--100, #151515);
+    line-height: 1.2;
+}
+
+/* Service list items */
+.service-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.service-item {
+    padding: 12px 16px;
+    background-color: var(--pf-v6-global--BackgroundColor--100, #f5f5f5);
+    border-left: 3px solid var(--pf-v6-global--primary-color--100, #0066cc);
+    border-radius: 3px;
+    color: var(--pf-v6-global--Color--100, #151515);
+    transition: background-color 0.2s ease;
+}
+
+.service-item:hover {
+    background-color: var(--pf-v6-global--BackgroundColor--150, #e7e7e7);
+}
+
+/* Log container - terminal style */
+#log-container {
+    background-color: var(--pf-v6-global--BackgroundColor--dark-100, #1a1a1a);
+    color: var(--pf-v6-global--Color--light-100, #ffffff);
+    padding: 16px;
+    border-radius: 4px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: "Liberation Mono", "Consolas", "SFMono-Regular", "Menlo", "Monaco", "Courier New", monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    border: 1px solid var(--pf-v6-global--BorderColor--100, #d2d2d2);
+}
+
+.log-line {
+    margin: 2px 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* Log severity colors */
+.log-error {
+    color: #ff6b6b;
+}
+
+.log-warn {
+    color: #f4c030;
+}
+
+.log-info {
+    color: #73c991;
+}
+
+/* Buttons - PatternFly style */
+.pf-v6-c-button {
+    display: inline-block;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: center;
+    white-space: nowrap;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.pf-v6-c-button.pf-m-primary {
+    color: var(--pf-v6-global--Color--light-100, #ffffff);
+    background-color: var(--pf-v6-global--primary-color--100, #0066cc);
+    border-color: var(--pf-v6-global--primary-color--100, #0066cc);
+}
+
+.pf-v6-c-button.pf-m-primary:hover {
+    background-color: var(--pf-v6-global--primary-color--200, #004080);
+    border-color: var(--pf-v6-global--primary-color--200, #004080);
+}
+
+.pf-v6-c-button.pf-m-secondary {
+    color: var(--pf-v6-global--primary-color--100, #0066cc);
+    background-color: transparent;
+    border-color: var(--pf-v6-global--primary-color--100, #0066cc);
+}
+
+.pf-v6-c-button.pf-m-secondary:hover {
+    background-color: var(--pf-v6-global--primary-color--100, #0066cc);
+    color: var(--pf-v6-global--Color--light-100, #ffffff);
+}
+
+.pf-v6-c-button.pf-m-small {
+    font-size: 12px;
+    padding: 4px 12px;
+}
+
+.pf-v6-c-button.pf-m-danger {
+    color: var(--pf-v6-global--Color--light-100, #ffffff);
+    background-color: var(--pf-v6-global--danger-color--100, #c9190b);
+    border-color: var(--pf-v6-global--danger-color--100, #c9190b);
+}
+
+.pf-v6-c-button.pf-m-danger:hover {
+    background-color: var(--pf-v6-global--danger-color--200, #a30000);
+    border-color: var(--pf-v6-global--danger-color--200, #a30000);
+}
+
+.pf-v6-c-button.pf-m-success {
+    color: var(--pf-v6-global--Color--light-100, #ffffff);
+    background-color: var(--pf-v6-global--success-color--100, #3e8635);
+    border-color: var(--pf-v6-global--success-color--100, #3e8635);
+}
+
+.pf-v6-c-button.pf-m-success:hover {
+    background-color: var(--pf-v6-global--success-color--200, #1e4f18);
+    border-color: var(--pf-v6-global--success-color--200, #1e4f18);
+}
+
+.pf-v6-c-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Button container */
+.button-container {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+/* Legacy button support - auto-converts to PatternFly style */
+button:not([class*="pf-"]) {
+    padding: 8px 16px;
+    font-size: 14px;
+    color: var(--pf-v6-global--Color--light-100, #ffffff);
+    background-color: var(--pf-v6-global--primary-color--100, #0066cc);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-family: inherit;
+}
+
+button:not([class*="pf-"]):hover {
+    background-color: var(--pf-v6-global--primary-color--200, #004080);
+}
+
+button:not([class*="pf-"]):disabled {
+    background-color: var(--pf-v6-global--disabled-color--100, #999999);
+    cursor: not-allowed;
+}
+
+/* Status indicator colors - used instead of inline styles for CSP */
+.status-indicator-success {
+    color: #3e8635;
+}
+
+.status-indicator-danger {
+    color: #c9190b;
+}
+
+.no-traffic-message {
+    padding: 8px;
+    color: #6a6e73;
+}
+
+#autoscroll-toggle {
+    margin-bottom: 8px;
+}
+
+/* Dark mode adjustments for status indicators */
+@media (prefers-color-scheme: dark) {
+    .status-indicator-success {
+        color: #73c991;
+    }
+    
+    .status-indicator-danger {
+        color: #ff6b6b;
+    }
+    
+    .no-traffic-message {
+        color: #c7c7c7;
+    }
+}
+
+/* Scrollbar styling for log container */
+#log-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+#log-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+#log-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+#log-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Scrollbar styling for log container */
+#log-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+#log-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+#log-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+#log-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* ADD THIS NEW SECTION: Dark mode scrollbar styling */
+html.pf-v6-theme-dark #log-container::-webkit-scrollbar-track,
+.pf-v6-theme-dark #log-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+html.pf-v6-theme-dark #log-container::-webkit-scrollbar-thumb,
+.pf-v6-theme-dark #log-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+html.pf-v6-theme-dark #log-container::-webkit-scrollbar-thumb:hover,
+.pf-v6-theme-dark #log-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Main page scrollbar - light mode */
+body::-webkit-scrollbar {
+    width: 12px;
+}
+
+body::-webkit-scrollbar-track {
+    background: #f0f0f0;
+}
+
+body::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 6px;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Main page scrollbar - dark mode */
+html.pf-v6-theme-dark body::-webkit-scrollbar-track,
+.pf-v6-theme-dark body::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+html.pf-v6-theme-dark body::-webkit-scrollbar-thumb,
+.pf-v6-theme-dark body::-webkit-scrollbar-thumb {
+    background: #4a4a4a;
+}
+
+html.pf-v6-theme-dark body::-webkit-scrollbar-thumb:hover,
+.pf-v6-theme-dark body::-webkit-scrollbar-thumb:hover {
+    background: #5a5a5a;
+}
+
+/* Dark mode support - responds to Cockpit's theme class */
+html.pf-v6-theme-dark body,
+.pf-v6-theme-dark body {
+    color: #ffffff;
+    background-color: #151515;
+}
+
+html.pf-v6-theme-dark .pf-v6-c-page__main-section,
+.pf-v6-theme-dark .pf-v6-c-page__main-section {
+    background-color: #151515;
+}
+
+html.pf-v6-theme-dark .pf-v6-c-card,
+.pf-v6-theme-dark .pf-v6-c-card {
+    background-color: #212427;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+html.pf-v6-theme-dark .pf-v6-c-card__title,
+.pf-v6-theme-dark .pf-v6-c-card__title {
+    border-bottom-color: #444548;
+    background-color: #212427;
+}
+
+html.pf-v6-theme-dark .pf-v6-c-card__title-text,
+.pf-v6-theme-dark .pf-v6-c-card__title-text {
+    color: #ffffff;
+}
+
+html.pf-v6-theme-dark .pf-v6-c-description-list__term,
+.pf-v6-theme-dark .pf-v6-c-description-list__term {
+    color: #c7c7c7;
+}
+
+html.pf-v6-theme-dark .pf-v6-c-description-list__description,
+.pf-v6-theme-dark .pf-v6-c-description-list__description {
+    color: #ffffff;
+}
+
+html.pf-v6-theme-dark .stat-label,
+.pf-v6-theme-dark .stat-label {
+    color: #c7c7c7;
+}
+
+html.pf-v6-theme-dark .stat-value,
+.pf-v6-theme-dark .stat-value {
+    color: #ffffff;
+}
+
+html.pf-v6-theme-dark .service-item,
+.pf-v6-theme-dark .service-item {
+    background-color: #2b2d31;
+    color: #ffffff;
+}
+
+html.pf-v6-theme-dark .service-item:hover,
+.pf-v6-theme-dark .service-item:hover {
+    background-color: #35373b;
+}
+
+html.pf-v6-theme-dark .status-indicator-success,
+.pf-v6-theme-dark .status-indicator-success {
+    color: #73c991;
+}
+
+html.pf-v6-theme-dark .status-indicator-danger,
+.pf-v6-theme-dark .status-indicator-danger {
+    color: #ff6b6b;
+}
+
+html.pf-v6-theme-dark .no-traffic-message,
+.pf-v6-theme-dark .no-traffic-message {
+    color: #c7c7c7;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .pf-v6-c-page__main-section {
+        padding: 16px;
+    }
+    
+    .pf-v6-c-card__body {
+        padding: 16px;
+    }
+    
+    .stat-container {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .pf-v6-c-description-list.pf-m-horizontal {
+        grid-template-columns: 1fr;
+        row-gap: 8px;
+    }
+}
+
+/* Notification alerts - for showNotification function */
+.pf-v6-c-alert {
+    padding: 16px;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    animation: slideIn 0.3s ease-out;
+}
+
+.pf-v6-c-alert.pf-m-success {
+    background-color: #f0f8f0;
+    border-left: 4px solid #3e8635;
+    color: #1e4f18;
+}
+
+.pf-v6-c-alert.pf-m-danger {
+    background-color: #fef6f5;
+    border-left: 4px solid #c9190b;
+    color: #a30000;
+}
+
+.pf-v6-c-alert.pf-m-warning {
+    background-color: #fffbf0;
+    border-left: 4px solid #f0ab00;
+    color: #795600;
+}
+
+.pf-v6-c-alert.pf-m-info {
+    background-color: #f0f6ff;
+    border-left: 4px solid #0066cc;
+    color: #004080;
+}
+
+.pf-v6-c-alert__title {
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Dark mode notifications */
+html.pf-v6-theme-dark .pf-v6-c-alert.pf-m-success,
+.pf-v6-theme-dark .pf-v6-c-alert.pf-m-success {
+    background-color: #1e4f18;
+    color: #f0f8f0;
+}
+
+html.pf-v6-theme-dark .pf-v6-c-alert.pf-m-danger,
+.pf-v6-theme-dark .pf-v6-c-alert.pf-m-danger {
+    background-color: #a30000;
+    color: #fef6f5;
+}
+
+html.pf-v6-theme-dark .pf-v6-c-alert.pf-m-warning,
+.pf-v6-theme-dark .pf-v6-c-alert.pf-m-warning {
+    background-color: #795600;
+    color: #fffbf0;
+}
+
+html.pf-v6-theme-dark .pf-v6-c-alert.pf-m-info,
+.pf-v6-theme-dark .pf-v6-c-alert.pf-m-info {
+    background-color: #004080;
+    color: #f0f6ff;
+}
+
+/* Button active/focus states for better UX */
+.pf-v6-c-button:active {
+    transform: translateY(1px);
+}
+
+.pf-v6-c-button:focus {
+    outline: 2px solid var(--pf-v6-global--primary-color--100, #0066cc);
+    outline-offset: 2px;
+}
+
+/* Enhanced mobile responsive */
+@media (max-width: 768px) {
+    .button-container {
+        flex-direction: column;
+    }
+    
+    .button-container .pf-v6-c-button {
+        width: 100%;
+    }
+    
+    /* Notifications take up more width on mobile */
+    .pf-v6-c-alert {
+        max-width: calc(100vw - 40px) !important;
+        right: 20px !important;
+    }
+}
