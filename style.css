@@ -134,7 +134,7 @@ body {
 }
 
 /* Log container - terminal style */
-#log-container {
+.log-container {
     background-color: var(--pf-v6-global--BackgroundColor--dark-100, #1a1a1a);
     color: var(--pf-v6-global--Color--light-100, #ffffff);
     padding: 16px;
@@ -281,8 +281,32 @@ button:not([class*="pf-"]):disabled {
     color: #6a6e73;
 }
 
-#autoscroll-toggle {
+.autoscroll-toggle {
     margin-bottom: 8px;
+}
+
+/* Multi-tunnel additions */
+.tunnel-unit-label {
+    font-weight: 400;
+    font-size: 13px;
+    color: var(--pf-v6-global--Color--200, #6a6e73);
+}
+
+.tunnel-subheading {
+    margin: 20px 0 8px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--pf-v6-global--Color--100, #151515);
+}
+
+html.pf-v6-theme-dark .tunnel-unit-label,
+.pf-v6-theme-dark .tunnel-unit-label {
+    color: #c7c7c7;
+}
+
+html.pf-v6-theme-dark .tunnel-subheading,
+.pf-v6-theme-dark .tunnel-subheading {
+    color: #ffffff;
 }
 
 /* Dark mode adjustments for status indicators */
@@ -301,54 +325,54 @@ button:not([class*="pf-"]):disabled {
 }
 
 /* Scrollbar styling for log container */
-#log-container::-webkit-scrollbar {
+.log-container::-webkit-scrollbar {
     width: 8px;
 }
 
-#log-container::-webkit-scrollbar-track {
+.log-container::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.05);
 }
 
-#log-container::-webkit-scrollbar-thumb {
+.log-container::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
     border-radius: 4px;
 }
 
-#log-container::-webkit-scrollbar-thumb:hover {
+.log-container::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
 }
 
 /* Scrollbar styling for log container */
-#log-container::-webkit-scrollbar {
+.log-container::-webkit-scrollbar {
     width: 8px;
 }
 
-#log-container::-webkit-scrollbar-track {
+.log-container::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.05);
 }
 
-#log-container::-webkit-scrollbar-thumb {
+.log-container::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
     border-radius: 4px;
 }
 
-#log-container::-webkit-scrollbar-thumb:hover {
+.log-container::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
 }
 
 /* ADD THIS NEW SECTION: Dark mode scrollbar styling */
-html.pf-v6-theme-dark #log-container::-webkit-scrollbar-track,
-.pf-v6-theme-dark #log-container::-webkit-scrollbar-track {
+html.pf-v6-theme-dark .log-container::-webkit-scrollbar-track,
+.pf-v6-theme-dark .log-container::-webkit-scrollbar-track {
     background: rgba(0, 0, 0, 0.3);
 }
 
-html.pf-v6-theme-dark #log-container::-webkit-scrollbar-thumb,
-.pf-v6-theme-dark #log-container::-webkit-scrollbar-thumb {
+html.pf-v6-theme-dark .log-container::-webkit-scrollbar-thumb,
+.pf-v6-theme-dark .log-container::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.3);
 }
 
-html.pf-v6-theme-dark #log-container::-webkit-scrollbar-thumb:hover,
-.pf-v6-theme-dark #log-container::-webkit-scrollbar-thumb:hover {
+html.pf-v6-theme-dark .log-container::-webkit-scrollbar-thumb:hover,
+.pf-v6-theme-dark .log-container::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.5);
 }
 
