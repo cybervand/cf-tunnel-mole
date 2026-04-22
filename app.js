@@ -32,9 +32,59 @@ try {
 
 var cockpit = window.cockpit;
 
+// Sentinel for the "+ Add Tunnel" pseudo-tab.
+var ADD_TAB = '__add__';
+
 // Tracks the set of currently rendered units so rediscovery only re-renders
 // when the set changes.
 var renderedUnits = [];
+var activeTab = null;
+
+// Configurable prefixes for stripping pasted Cloudflare commands. Loaded
+// from ./token-prefixes.txt at startup; empty array is a safe default.
+var tokenPrefixes = [];
+
+function loadTokenPrefixes() {
+    return fetch('token-prefixes.txt', { cache: 'no-store' })
+        .then(function(res) { return res.ok ? res.text() : ''; })
+        .then(function(text) {
+            tokenPrefixes = text.split(/\r?\n/)
+                .map(function(l) { return l.trim(); })
+                .filter(function(l) { return l && l.charAt(0) !== '#'; });
+        })
+        .catch(function() { tokenPrefixes = []; });
+}
+
+// Strip a known leading command from a user paste and return just the token.
+// Examples of handled paste shapes:
+//   "sudo cloudflared service install eyJ..."       -> "eyJ..."
+//   "cloudflared tunnel run --token eyJ..."          -> "eyJ..."
+//   "cloudflared tunnel run --token=eyJ..."          -> "eyJ..."
+//   "eyJ..."                                         -> "eyJ..."
+function cleanToken(input) {
+    var raw = (input || '').trim();
+    if (!raw) return '';
+
+    // Normalize internal whitespace to single spaces so "--token  eyJ..."
+    // matches a prefix that ends in "--token".
+    var normalized = raw.replace(/\s+/g, ' ');
+
+    for (var i = 0; i < tokenPrefixes.length; i++) {
+        var prefix = tokenPrefixes[i].replace(/\s+/g, ' ');
+        if (!prefix) continue;
+        if (normalized.indexOf(prefix) === 0) {
+            var after = normalized.slice(prefix.length).replace(/^[\s=]+/, '');
+            return after.split(/\s+/)[0];
+        }
+    }
+
+    // No configured prefix matched. Fallback: take the last whitespace-
+    // separated chunk. Covers "anything <TOKEN>" paste patterns even
+    // without an explicit prefix entry. Strip a leading "=" for
+    // "--token=VALUE" tails.
+    var parts = normalized.split(/\s+/);
+    return parts[parts.length - 1].replace(/^=/, '');
+}
 
 function escapeHtml(text) {
     var div = document.createElement('div');
@@ -79,6 +129,49 @@ function updateVersion() {
 }
 
 // ------------------------------------------------------------------
+// Tab strip
+// ------------------------------------------------------------------
+
+function renderTabs(tunnels) {
+    var strip = document.getElementById('tunnel-tabs');
+    var tabsHtml = tunnels.map(function(t) {
+        return '<button class="tunnel-tab" data-tab-unit="' +
+            escapeHtml(t.unit) + '" type="button">' +
+            escapeHtml(t.name) + '</button>';
+    }).join('');
+    tabsHtml += '<button class="tunnel-tab tunnel-tab-add" data-tab-add="1" type="button" title="Install a new tunnel">+ Add Tunnel</button>';
+    strip.innerHTML = tabsHtml;
+
+    strip.querySelectorAll('[data-tab-unit]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            setActiveTab(btn.getAttribute('data-tab-unit'));
+        });
+    });
+    var addBtn = strip.querySelector('[data-tab-add]');
+    if (addBtn) addBtn.addEventListener('click', function() { setActiveTab(ADD_TAB); });
+}
+
+function setActiveTab(id) {
+    activeTab = id;
+
+    document.querySelectorAll('.tunnel-tab').forEach(function(tab) {
+        var isUnit = tab.getAttribute('data-tab-unit') === id;
+        var isAdd = id === ADD_TAB && tab.hasAttribute('data-tab-add');
+        tab.classList.toggle('active', isUnit || isAdd);
+    });
+
+    document.querySelectorAll('#tunnels > .tunnel-card').forEach(function(card) {
+        var matches = card.getAttribute('data-tunnel-unit') === id;
+        card.style.display = matches ? '' : 'none';
+    });
+
+    var form = document.getElementById('install-form-container');
+    if (form) form.style.display = (id === ADD_TAB) ? '' : 'none';
+
+    try { localStorage.setItem('activeTab', id); } catch (e) {}
+}
+
+// ------------------------------------------------------------------
 // Per-tunnel card rendering + wiring
 // ------------------------------------------------------------------
 
@@ -114,7 +207,6 @@ function updateTunnelStatus(cardEl, unit) {
     cockpit.spawn(["systemctl", "is-active", unit])
         .done(function(output) {
             var active = output.trim() === "active";
-
             part(cardEl, 'status').innerHTML = active
                 ? '<dl class="pf-v6-c-description-list pf-m-horizontal">' +
                   '<dt class="pf-v6-c-description-list__term">Status</dt>' +
@@ -154,10 +246,8 @@ function getConnections(cardEl, unit) {
             var registered = (output.match(/Registered tunnel connection/g) || []).length;
             var connections = (output.match(/Connection [a-f0-9-]+ registered/g) || []).length;
             var requests = (output.match(/(\d+) requests|request to/gi) || []).length;
-
             var errors = (output.match(/level=error|ERR |error:/gi) || []).length;
             var warnings = (output.match(/level=warning|WRN |warning:/gi) || []).length;
-
             var totalConnections = Math.max(registered, connections);
 
             part(cardEl, 'stats').innerHTML =
@@ -190,7 +280,6 @@ function getServices(cardEl, unit) {
     cockpit.spawn(["journalctl", "-u", unit, "--since", "1 hour ago", "-n", "1000", "--no-pager"])
         .done(function(output) {
             var services = [];
-
             var patterns = [
                 /dest=https?:\/\/([^\s\/:]+(?::\d+)?)/g,
                 /originService=([^\s]+)/g,
@@ -317,6 +406,205 @@ function wireCard(cardEl) {
 }
 
 // ------------------------------------------------------------------
+// Install form (the "+ Add Tunnel" tab)
+// ------------------------------------------------------------------
+
+function installFormHtml() {
+    return '' +
+        '<div class="pf-v6-c-card tunnel-card" id="install-form-container">' +
+            '<div class="pf-v6-c-card__title">' +
+                '<h2 class="pf-v6-c-card__title-text">Install a New Tunnel</h2>' +
+            '</div>' +
+            '<div class="pf-v6-c-card__body">' +
+                '<div class="form-field">' +
+                    '<label for="install-name">Tunnel name</label>' +
+                    '<input type="text" id="install-name" placeholder="e.g. prod, staging" autocomplete="off">' +
+                    '<div class="form-hint">Letters, digits, underscores, hyphens. Used as the systemd unit name: <code>cloudflared-&lt;name&gt;.service</code></div>' +
+                '</div>' +
+                '<div class="form-field">' +
+                    '<label for="install-token">Tunnel token</label>' +
+                    '<textarea id="install-token" placeholder="Paste the whole install command from the Cloudflare Zero Trust dashboard — the app strips the command and keeps just the token" autocomplete="off" spellcheck="false" rows="3"></textarea>' +
+                    '<div class="form-hint">Paste the full command (e.g. <code>sudo cloudflared service install eyJ...</code>). The app removes the leading command using prefixes from <code>token-prefixes.txt</code>, falling back to the last whitespace-separated chunk.</div>' +
+                    '<div id="token-preview" class="token-preview" aria-live="polite"></div>' +
+                '</div>' +
+                '<div class="button-container">' +
+                    '<button class="pf-v6-c-button pf-m-primary" id="install-submit">Install Tunnel</button>' +
+                    '<button class="pf-v6-c-button pf-m-secondary" id="install-cancel">Cancel</button>' +
+                '</div>' +
+                '<div id="install-progress" aria-live="polite"></div>' +
+            '</div>' +
+        '</div>';
+}
+
+function buildUnitContent(name, token, binaryPath) {
+    return '' +
+        '[Unit]\n' +
+        'Description=Cloudflare Tunnel (' + name + ')\n' +
+        'After=network.target\n' +
+        '\n' +
+        '[Service]\n' +
+        'TimeoutStartSec=0\n' +
+        'Type=simple\n' +
+        'ExecStart=' + binaryPath + ' --no-autoupdate tunnel run --token ' + token + '\n' +
+        'Restart=on-failure\n' +
+        'RestartSec=5s\n' +
+        'User=root\n' +
+        '\n' +
+        '[Install]\n' +
+        'WantedBy=multi-user.target\n';
+}
+
+function setInstallProgress(kind, message) {
+    var el = document.getElementById('install-progress');
+    if (!el) return;
+    if (!kind) { el.innerHTML = ''; return; }
+    el.innerHTML = '<div class="pf-v6-c-alert pf-m-' + kind + '">' +
+                   '<div class="pf-v6-c-alert__title">' + escapeHtml(message) + '</div></div>';
+}
+
+function installFailed(err, submitBtn) {
+    var msg = err && err.message ? err.message : String(err);
+    setInstallProgress('danger', 'Install failed: ' + msg);
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Install Tunnel';
+    console.error("Install failed:", err);
+}
+
+function installTunnel() {
+    var nameInput = document.getElementById('install-name');
+    var tokenInput = document.getElementById('install-token');
+    var submitBtn = document.getElementById('install-submit');
+
+    var name = (nameInput.value || '').trim();
+    var token = cleanToken(tokenInput.value);
+
+    if (!/^[a-zA-Z0-9_-]{1,48}$/.test(name)) {
+        setInstallProgress('danger', 'Name must be 1-48 characters: letters, digits, underscores, hyphens.');
+        return;
+    }
+    // Conservative: JWT/base64 token chars only. Prevents malformed unit files.
+    if (!/^[A-Za-z0-9+/=._-]+$/.test(token)) {
+        setInstallProgress('danger', 'Could not extract a valid token. Paste the full install command from the Cloudflare dashboard.');
+        return;
+    }
+    if (token.length < 20) {
+        setInstallProgress('danger', 'Extracted token looks too short. Paste the full command from the Cloudflare dashboard.');
+        return;
+    }
+
+    var unit = 'cloudflared-' + name + '.service';
+    var unitPath = '/etc/systemd/system/' + unit;
+
+    if (renderedUnits.indexOf(unit) !== -1) {
+        setInstallProgress('danger', 'A tunnel named "' + name + '" already exists.');
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Installing...';
+    setInstallProgress('info', 'Locating cloudflared binary…');
+
+    // Detect the cloudflared binary path so the unit's ExecStart works
+    // regardless of package-manager vs manual-install layout.
+    cockpit.spawn(["which", "cloudflared"], { err: "message" })
+        .done(function(whichOutput) {
+            var binaryPath = whichOutput.trim().split('\n')[0];
+            if (!binaryPath || binaryPath.charAt(0) !== '/') {
+                installFailed('Could not locate cloudflared binary (which returned: "' +
+                              whichOutput.trim() + '")', submitBtn);
+                return;
+            }
+
+            setInstallProgress('info', 'Writing unit file…');
+
+            // cockpit.file avoids shell escaping concerns with the token.
+            cockpit.file(unitPath, { superuser: "require" })
+                .replace(buildUnitContent(name, token, binaryPath))
+                .done(function() {
+                    setInstallProgress('info', 'Reloading systemd…');
+                    cockpit.spawn(["systemctl", "daemon-reload"], {
+                        superuser: "require", err: "message"
+                    })
+                    .done(function() {
+                        setInstallProgress('info', 'Enabling and starting tunnel…');
+                        cockpit.spawn(["systemctl", "enable", "--now", unit], {
+                            superuser: "require", err: "message"
+                        })
+                        .done(function() {
+                            showNotification('Tunnel "' + name + '" installed and started', 'success');
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = 'Install Tunnel';
+                            nameInput.value = '';
+                            tokenInput.value = '';
+                            updateTokenPreview();
+                            setInstallProgress(null);
+
+                            // Rediscover, re-render tabs, and switch to the new tunnel.
+                            tunnelDiscovery.findTunnels(function(tunnels) {
+                                renderTunnels(tunnels, { preferActive: unit });
+                            }, function(err) {
+                                console.error("Post-install discovery failed:", err);
+                            });
+                        })
+                        .fail(function(err) { installFailed(err, submitBtn); });
+                    })
+                    .fail(function(err) { installFailed(err, submitBtn); });
+                })
+                .fail(function(err) { installFailed(err, submitBtn); });
+        })
+        .fail(function(err) { installFailed(err, submitBtn); });
+}
+
+function updateTokenPreview() {
+    var tokenInput = document.getElementById('install-token');
+    var preview = document.getElementById('token-preview');
+    if (!tokenInput || !preview) return;
+
+    var raw = tokenInput.value || '';
+    if (!raw.trim()) {
+        preview.textContent = '';
+        preview.className = 'token-preview';
+        return;
+    }
+
+    var extracted = cleanToken(raw);
+    if (!extracted) {
+        preview.textContent = 'Could not detect a token in the paste.';
+        preview.className = 'token-preview token-preview-empty';
+        return;
+    }
+
+    var stripped = raw.trim() !== extracted;
+    var short = extracted.length > 24
+        ? extracted.slice(0, 12) + '…' + extracted.slice(-8)
+        : extracted;
+    preview.textContent = (stripped ? 'Detected token: ' : 'Token looks raw: ') +
+                          short + '  (' + extracted.length + ' chars)';
+    preview.className = 'token-preview token-preview-ok';
+}
+
+function wireInstallForm() {
+    var submit = document.getElementById('install-submit');
+    var cancel = document.getElementById('install-cancel');
+    var tokenInput = document.getElementById('install-token');
+
+    if (submit) submit.addEventListener('click', installTunnel);
+    if (cancel) {
+        cancel.addEventListener('click', function() {
+            document.getElementById('install-name').value = '';
+            document.getElementById('install-token').value = '';
+            updateTokenPreview();
+            setInstallProgress(null);
+            // Jump to the first tunnel if there is one, else stay on + tab.
+            if (renderedUnits.length > 0) setActiveTab(renderedUnits[0]);
+        });
+    }
+    if (tokenInput) {
+        tokenInput.addEventListener('input', updateTokenPreview);
+    }
+}
+
+// ------------------------------------------------------------------
 // Update cloudflared binary (shared) — restarts every discovered unit
 // ------------------------------------------------------------------
 
@@ -403,20 +691,12 @@ function sameUnitSet(a, b) {
     return true;
 }
 
-function renderTunnels(tunnels) {
+function renderTunnels(tunnels, opts) {
+    opts = opts || {};
     var container = document.getElementById('tunnels');
 
-    if (tunnels.length === 0) {
-        container.innerHTML =
-            '<div class="pf-v6-c-card"><div class="pf-v6-c-card__body">' +
-            'No cloudflared tunnels detected. Install one with ' +
-            '<code>cloudflared service install</code>.' +
-            '</div></div>';
-        renderedUnits = [];
-        return;
-    }
-
-    container.innerHTML = tunnels.map(tunnelCardHtml).join('');
+    var cardsHtml = tunnels.map(tunnelCardHtml).join('');
+    container.innerHTML = cardsHtml + installFormHtml();
     renderedUnits = tunnels.map(function(t) { return t.unit; });
 
     tunnels.forEach(function(tunnel) {
@@ -427,10 +707,33 @@ function renderTunnels(tunnels) {
         updateTunnelStatus(card, tunnel.unit);
         updateLogs(card, tunnel.unit);
     });
+    wireInstallForm();
+
+    renderTabs(tunnels);
+
+    // Decide which tab to activate:
+    //   1. caller-provided preferActive (e.g. unit just installed)
+    //   2. previously active tab if still valid
+    //   3. first tunnel
+    //   4. + Add Tunnel (when no tunnels exist)
+    var saved = null;
+    try { saved = localStorage.getItem('activeTab'); } catch (e) {}
+    var want = opts.preferActive || activeTab || saved;
+
+    var valid = want === ADD_TAB ||
+                renderedUnits.indexOf(want) !== -1;
+
+    if (valid && want) {
+        setActiveTab(want);
+    } else if (renderedUnits.length > 0) {
+        setActiveTab(renderedUnits[0]);
+    } else {
+        setActiveTab(ADD_TAB);
+    }
 }
 
 function refreshAllCards() {
-    var cards = document.querySelectorAll('#tunnels .tunnel-card');
+    var cards = document.querySelectorAll('#tunnels .tunnel-card[data-tunnel-unit]');
     cards.forEach(function(card) {
         var unit = card.getAttribute('data-tunnel-unit');
         updateTunnelStatus(card, unit);
@@ -443,7 +746,6 @@ function rediscoverAndMaybeRender() {
         function(tunnels) {
             var units = tunnels.map(function(t) { return t.unit; }).sort();
             if (sameUnitSet(units, renderedUnits.slice().sort())) {
-                // Same set — just refresh existing cards in place.
                 refreshAllCards();
             } else {
                 renderTunnels(tunnels);
@@ -451,7 +753,6 @@ function rediscoverAndMaybeRender() {
         },
         function(err) {
             console.error("Discovery failed:", err);
-            // Keep existing cards; just refresh them so the page stays useful.
             refreshAllCards();
         }
     );
@@ -470,6 +771,7 @@ window.addEventListener('load', function() {
     document.getElementById('refresh-btn').addEventListener('click', refreshAll);
     document.getElementById('update-btn').addEventListener('click', updateCloudflared);
 
+    loadTokenPrefixes();
     updateVersion();
 
     tunnelDiscovery.findTunnels(
@@ -479,7 +781,10 @@ window.addEventListener('load', function() {
             document.getElementById('tunnels').innerHTML =
                 '<div class="pf-v6-c-card"><div class="pf-v6-c-card__body">' +
                 'Failed to discover tunnels: ' + escapeHtml(String(err)) +
-                '</div></div>';
+                '</div></div>' + installFormHtml();
+            wireInstallForm();
+            renderTabs([]);
+            setActiveTab(ADD_TAB);
         }
     );
 

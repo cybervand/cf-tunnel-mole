@@ -285,6 +285,250 @@ button:not([class*="pf-"]):disabled {
     margin-bottom: 8px;
 }
 
+/* ========================================
+   Multi-tunnel app shell: header, tabs, forms
+   ======================================== */
+
+.app-header {
+    padding: 20px 24px 16px 24px;
+    background-color: var(--pf-v6-global--BackgroundColor--100, #f0f0f0);
+    border-bottom: 1px solid var(--pf-v6-global--BorderColor--100, #d2d2d2);
+}
+
+.app-header h1 {
+    margin: 0 0 12px 0;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--pf-v6-global--Color--100, #151515);
+}
+
+.app-header-meta {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-size: 13px;
+    color: var(--pf-v6-global--Color--200, #6a6e73);
+    flex-wrap: wrap;
+}
+
+.app-header-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+/* Tab strip */
+.tunnel-tabs {
+    display: flex;
+    gap: 2px;
+    padding: 0 24px;
+    background-color: var(--pf-v6-global--BackgroundColor--100, #f0f0f0);
+    border-bottom: 1px solid var(--pf-v6-global--BorderColor--100, #d2d2d2);
+    overflow-x: auto;
+}
+
+.tunnel-tab {
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--pf-v6-global--Color--200, #6a6e73);
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+    margin-bottom: -1px;
+}
+
+.tunnel-tab:hover {
+    color: var(--pf-v6-global--Color--100, #151515);
+    background-color: var(--pf-v6-global--BackgroundColor--150, #e7e7e7);
+}
+
+.tunnel-tab.active {
+    color: var(--pf-v6-global--primary-color--100, #0066cc);
+    border-bottom-color: var(--pf-v6-global--primary-color--100, #0066cc);
+    font-weight: 600;
+}
+
+.tunnel-tab-add {
+    color: var(--pf-v6-global--success-color--100, #3e8635);
+    font-weight: 600;
+}
+
+.tunnel-tab-add.active {
+    color: var(--pf-v6-global--success-color--100, #3e8635);
+    border-bottom-color: var(--pf-v6-global--success-color--100, #3e8635);
+}
+
+/* Install form fields */
+.form-field {
+    margin-bottom: 16px;
+    max-width: 640px;
+}
+
+.form-field label {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 4px;
+    color: var(--pf-v6-global--Color--100, #151515);
+}
+
+.form-field input,
+.form-field textarea {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    border: 1px solid var(--pf-v6-global--BorderColor--100, #d2d2d2);
+    border-radius: 4px;
+    background-color: var(--pf-v6-global--BackgroundColor--200, #ffffff);
+    color: var(--pf-v6-global--Color--100, #151515);
+    box-sizing: border-box;
+}
+
+.form-field textarea {
+    font-family: "Liberation Mono", "Consolas", "SFMono-Regular", "Menlo", "Monaco", monospace;
+    font-size: 12px;
+    resize: vertical;
+    min-height: 60px;
+}
+
+.form-field input:focus,
+.form-field textarea:focus {
+    outline: 2px solid var(--pf-v6-global--primary-color--100, #0066cc);
+    outline-offset: 1px;
+    border-color: var(--pf-v6-global--primary-color--100, #0066cc);
+}
+
+.form-hint {
+    font-size: 12px;
+    color: var(--pf-v6-global--Color--200, #6a6e73);
+    margin-top: 4px;
+}
+
+.form-hint code {
+    padding: 1px 5px;
+    background-color: var(--pf-v6-global--BackgroundColor--150, #e7e7e7);
+    border-radius: 3px;
+    font-size: 11px;
+}
+
+.token-preview {
+    margin-top: 6px;
+    font-size: 12px;
+    font-family: "Liberation Mono", "Consolas", "SFMono-Regular", "Menlo", "Monaco", monospace;
+    min-height: 1em;
+}
+
+.token-preview:empty {
+    display: none;
+}
+
+.token-preview-ok {
+    color: var(--pf-v6-global--success-color--100, #3e8635);
+}
+
+.token-preview-empty {
+    color: var(--pf-v6-global--danger-color--100, #c9190b);
+}
+
+html.pf-v6-theme-dark .token-preview-ok,
+.pf-v6-theme-dark .token-preview-ok {
+    color: #73c991;
+}
+
+html.pf-v6-theme-dark .token-preview-empty,
+.pf-v6-theme-dark .token-preview-empty {
+    color: #ff6b6b;
+}
+
+#install-progress:empty {
+    display: none;
+}
+
+#install-progress {
+    margin-top: 16px;
+}
+
+/* Dark mode overrides */
+html.pf-v6-theme-dark .app-header,
+.pf-v6-theme-dark .app-header {
+    background-color: #151515;
+    border-bottom-color: #444548;
+}
+
+html.pf-v6-theme-dark .app-header h1,
+.pf-v6-theme-dark .app-header h1 {
+    color: #ffffff;
+}
+
+html.pf-v6-theme-dark .app-header-meta,
+.pf-v6-theme-dark .app-header-meta {
+    color: #c7c7c7;
+}
+
+html.pf-v6-theme-dark .tunnel-tabs,
+.pf-v6-theme-dark .tunnel-tabs {
+    background-color: #151515;
+    border-bottom-color: #444548;
+}
+
+html.pf-v6-theme-dark .tunnel-tab,
+.pf-v6-theme-dark .tunnel-tab {
+    color: #c7c7c7;
+}
+
+html.pf-v6-theme-dark .tunnel-tab:hover,
+.pf-v6-theme-dark .tunnel-tab:hover {
+    color: #ffffff;
+    background-color: #2b2d31;
+}
+
+html.pf-v6-theme-dark .tunnel-tab.active,
+.pf-v6-theme-dark .tunnel-tab.active {
+    color: #4a9eff;
+    border-bottom-color: #4a9eff;
+}
+
+html.pf-v6-theme-dark .tunnel-tab-add,
+.pf-v6-theme-dark .tunnel-tab-add {
+    color: #73c991;
+}
+
+html.pf-v6-theme-dark .tunnel-tab-add.active,
+.pf-v6-theme-dark .tunnel-tab-add.active {
+    color: #73c991;
+    border-bottom-color: #73c991;
+}
+
+html.pf-v6-theme-dark .form-field label,
+.pf-v6-theme-dark .form-field label {
+    color: #ffffff;
+}
+
+html.pf-v6-theme-dark .form-field input,
+html.pf-v6-theme-dark .form-field textarea,
+.pf-v6-theme-dark .form-field input,
+.pf-v6-theme-dark .form-field textarea {
+    background-color: #2b2d31;
+    color: #ffffff;
+    border-color: #444548;
+}
+
+html.pf-v6-theme-dark .form-hint,
+.pf-v6-theme-dark .form-hint {
+    color: #c7c7c7;
+}
+
+html.pf-v6-theme-dark .form-hint code,
+.pf-v6-theme-dark .form-hint code {
+    background-color: #35373b;
+    color: #e7e7e7;
+}
+
 /* Multi-tunnel additions */
 .tunnel-unit-label {
     font-weight: 400;

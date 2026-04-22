@@ -37,6 +37,11 @@
             }
         }
 
+        // Units created by our in-app installer are named
+        // `cloudflared-<name>.service` — surface the <name> portion.
+        var prefixMatch = unitName.match(/^cloudflared-(.+)\.service$/);
+        if (prefixMatch) return prefixMatch[1];
+
         return unitName.replace(/\.service$/, '');
     }
 

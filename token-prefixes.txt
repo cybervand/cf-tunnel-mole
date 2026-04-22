@@ -1,0 +1,28 @@
+# token-prefixes.txt
+#
+# The "Install a New Tunnel" form accepts a full paste from the Cloudflare
+# Zero Trust dashboard (e.g. `sudo cloudflared service install eyJ...`).
+# This file tells the app which leading text to strip off before using the
+# remainder as the token.
+#
+# Rules:
+#   - Lines starting with # are comments and ignored.
+#   - Blank lines are ignored.
+#   - Each non-comment line is a literal prefix. Leading/trailing whitespace
+#     on the line is ignored; internal whitespace is treated as "one or more
+#     whitespace characters" at match time, so you don't have to fuss over
+#     double-spaces in pasted input.
+#   - The first matching prefix wins. If nothing matches, the app falls back
+#     to taking the last whitespace-separated chunk — which works for most
+#     `command <TOKEN>` paste patterns without any config at all.
+#
+# Add your own lines when Cloudflare shows a new variant. You can edit this
+# file in place on the host (/usr/share/cockpit/cloudflare/token-prefixes.txt)
+# and reload the Cockpit page to pick up changes.
+
+sudo cloudflared service install
+cloudflared service install
+sudo cloudflared tunnel run --token
+cloudflared tunnel run --token
+docker run cloudflare/cloudflared:latest tunnel --no-autoupdate run --token
+docker run cloudflare/cloudflared tunnel --no-autoupdate run --token
