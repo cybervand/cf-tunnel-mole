@@ -317,49 +317,101 @@ button:not([class*="pf-"]):disabled {
     margin-left: auto;
 }
 
+.version-pill {
+    display: inline-block;
+    padding: 2px 10px;
+    margin-left: 6px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    vertical-align: middle;
+    border: 1px solid transparent;
+}
+
+.version-pill-latest {
+    background-color: rgba(62, 134, 53, 0.12);
+    color: var(--pf-v6-global--success-color--100, #3e8635);
+    border-color: rgba(62, 134, 53, 0.35);
+}
+
+.version-pill-outdated {
+    background-color: rgba(240, 171, 0, 0.18);
+    color: #795600;
+    border-color: rgba(240, 171, 0, 0.45);
+}
+
+html.pf-v6-theme-dark .version-pill-latest,
+.pf-v6-theme-dark .version-pill-latest {
+    background-color: rgba(115, 201, 145, 0.15);
+    color: #73c991;
+    border-color: rgba(115, 201, 145, 0.45);
+}
+
+html.pf-v6-theme-dark .version-pill-outdated,
+.pf-v6-theme-dark .version-pill-outdated {
+    background-color: rgba(240, 171, 0, 0.2);
+    color: #f0ab00;
+    border-color: rgba(240, 171, 0, 0.55);
+}
+
 /* Tab strip */
 .tunnel-tabs {
     display: flex;
-    gap: 2px;
-    padding: 0 24px;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 12px 24px 0 24px;
     background-color: var(--pf-v6-global--BackgroundColor--100, #f0f0f0);
-    border-bottom: 1px solid var(--pf-v6-global--BorderColor--100, #d2d2d2);
-    overflow-x: auto;
 }
 
 .tunnel-tab {
-    padding: 12px 20px;
-    background: none;
-    border: none;
-    border-bottom: 3px solid transparent;
-    color: var(--pf-v6-global--Color--200, #6a6e73);
-    font-size: 14px;
+    padding: 8px 16px;
+    background-color: var(--pf-v6-global--BackgroundColor--200, #ffffff);
+    border: 1px solid var(--pf-v6-global--BorderColor--100, #d2d2d2);
+    border-radius: 6px;
+    color: var(--pf-v6-global--Color--100, #151515);
+    font-size: 13px;
+    font-weight: 500;
     font-family: inherit;
     cursor: pointer;
     white-space: nowrap;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-    margin-bottom: -1px;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .tunnel-tab:hover {
-    color: var(--pf-v6-global--Color--100, #151515);
-    background-color: var(--pf-v6-global--BackgroundColor--150, #e7e7e7);
+    border-color: var(--pf-v6-global--primary-color--100, #0066cc);
+    color: var(--pf-v6-global--primary-color--100, #0066cc);
 }
 
 .tunnel-tab.active {
-    color: var(--pf-v6-global--primary-color--100, #0066cc);
-    border-bottom-color: var(--pf-v6-global--primary-color--100, #0066cc);
-    font-weight: 600;
+    background-color: var(--pf-v6-global--primary-color--100, #0066cc);
+    border-color: var(--pf-v6-global--primary-color--100, #0066cc);
+    color: var(--pf-v6-global--Color--light-100, #ffffff);
+    box-shadow: 0 1px 3px rgba(0, 102, 204, 0.25);
+}
+
+.tunnel-tab.active:hover {
+    color: var(--pf-v6-global--Color--light-100, #ffffff);
 }
 
 .tunnel-tab-add {
     color: var(--pf-v6-global--success-color--100, #3e8635);
-    font-weight: 600;
+    border-style: dashed;
+    border-color: var(--pf-v6-global--success-color--100, #3e8635);
+}
+
+.tunnel-tab-add:hover {
+    color: var(--pf-v6-global--success-color--100, #3e8635);
+    border-color: var(--pf-v6-global--success-color--200, #1e4f18);
+    background-color: rgba(62, 134, 53, 0.08);
 }
 
 .tunnel-tab-add.active {
-    color: var(--pf-v6-global--success-color--100, #3e8635);
-    border-bottom-color: var(--pf-v6-global--success-color--100, #3e8635);
+    background-color: var(--pf-v6-global--success-color--100, #3e8635);
+    border-color: var(--pf-v6-global--success-color--100, #3e8635);
+    border-style: solid;
+    color: var(--pf-v6-global--Color--light-100, #ffffff);
+    box-shadow: 0 1px 3px rgba(62, 134, 53, 0.25);
 }
 
 /* Install form fields */
@@ -473,35 +525,48 @@ html.pf-v6-theme-dark .app-header-meta,
 html.pf-v6-theme-dark .tunnel-tabs,
 .pf-v6-theme-dark .tunnel-tabs {
     background-color: #151515;
-    border-bottom-color: #444548;
 }
 
 html.pf-v6-theme-dark .tunnel-tab,
 .pf-v6-theme-dark .tunnel-tab {
-    color: #c7c7c7;
+    background-color: #2b2d31;
+    border-color: #444548;
+    color: #e7e7e7;
 }
 
 html.pf-v6-theme-dark .tunnel-tab:hover,
 .pf-v6-theme-dark .tunnel-tab:hover {
-    color: #ffffff;
-    background-color: #2b2d31;
+    border-color: #4a9eff;
+    color: #4a9eff;
 }
 
 html.pf-v6-theme-dark .tunnel-tab.active,
 .pf-v6-theme-dark .tunnel-tab.active {
-    color: #4a9eff;
-    border-bottom-color: #4a9eff;
+    background-color: #0066cc;
+    border-color: #0066cc;
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(74, 158, 255, 0.3);
 }
 
 html.pf-v6-theme-dark .tunnel-tab-add,
 .pf-v6-theme-dark .tunnel-tab-add {
     color: #73c991;
+    border-color: #73c991;
+    background-color: transparent;
+}
+
+html.pf-v6-theme-dark .tunnel-tab-add:hover,
+.pf-v6-theme-dark .tunnel-tab-add:hover {
+    color: #73c991;
+    border-color: #a7e0b7;
+    background-color: rgba(115, 201, 145, 0.1);
 }
 
 html.pf-v6-theme-dark .tunnel-tab-add.active,
 .pf-v6-theme-dark .tunnel-tab-add.active {
-    color: #73c991;
-    border-bottom-color: #73c991;
+    background-color: #3e8635;
+    border-color: #3e8635;
+    color: #ffffff;
 }
 
 html.pf-v6-theme-dark .form-field label,

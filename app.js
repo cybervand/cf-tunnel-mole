@@ -40,6 +40,55 @@ var ADD_TAB = '__add__';
 var renderedUnits = [];
 var activeTab = null;
 
+// Whether cloudflared is installed on the host. Detected by updateVersion().
+// Starts optimistic so the button doesn't flicker to "Install" before
+// detection resolves; set to false on the first failed version check.
+var cloudflaredInstalled = true;
+
+// Map `uname -m` output to the arch suffix cloudflared publishes binaries for
+// at github.com/cloudflare/cloudflared/releases (see "Assets" on any release).
+var ARCH_MAP = {
+    'x86_64':  'amd64',
+    'aarch64': 'arm64',
+    'arm64':   'arm64',
+    'armv7l':  'armhf',
+    'armv6l':  'armhf',
+    'armhf':   'armhf',
+    'i686':    '386',
+    'i386':    '386'
+};
+
+function detectArch(onSuccess, onError) {
+    cockpit.spawn(["uname", "-m"], { err: "message" })
+        .done(function(out) {
+            var machine = out.trim();
+            var arch = ARCH_MAP[machine];
+            if (!arch) {
+                onError('Unsupported architecture: ' + machine +
+                        ' (no cloudflared binary published for this platform).');
+                return;
+            }
+            onSuccess(arch);
+        })
+        .fail(onError);
+}
+
+function downloadCloudflaredBinary(arch, onSuccess, onError) {
+    // arch comes from ARCH_MAP values (alphanumeric only), so it's safe to
+    // embed in the shell command — no user input reaches this path.
+    var url = 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-' + arch;
+    cockpit.spawn([
+        "bash", "-c",
+        "set -e; " +
+        "curl -fsSL --output /tmp/cloudflared '" + url + "'; " +
+        "chmod +x /tmp/cloudflared; " +
+        "cp /tmp/cloudflared /usr/local/bin/cloudflared; " +
+        "rm -f /tmp/cloudflared"
+    ], { superuser: "require", err: "message" })
+        .done(onSuccess)
+        .fail(onError);
+}
+
 // Configurable prefixes for stripping pasted Cloudflare commands. Loaded
 // from ./token-prefixes.txt at startup; empty array is a safe default.
 var tokenPrefixes = [];
@@ -116,15 +165,94 @@ function showNotification(message, type) {
 // Global (shared cloudflared binary) — version + update
 // ------------------------------------------------------------------
 
+function setUpdateButtonMode(installed) {
+    cloudflaredInstalled = installed;
+    var btn = document.getElementById('update-btn');
+    if (!btn) return;
+    btn.textContent = installed ? 'Update Cloudflared' : 'Install Cloudflared';
+}
+
+// Latest upstream version as a [YYYY, M, P] tuple, null until fetched or on
+// network failure. Cached across the session — fetched once at load.
+var latestVersion = null;
+var currentVersionString = null;
+
+function parseVersionNumber(s) {
+    var m = (s || '').match(/(\d+)\.(\d+)\.(\d+)/);
+    return m ? [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)] : null;
+}
+
+function compareVersions(a, b) {
+    for (var i = 0; i < 3; i++) {
+        if (a[i] !== b[i]) return a[i] - b[i];
+    }
+    return 0;
+}
+
+function renderVersionDisplay(versionString) {
+    var el = document.getElementById("version-info");
+    if (!el) return;
+    el.innerHTML = '';
+    if (!versionString) {
+        el.textContent = "Not installed";
+        currentVersionString = null;
+        return;
+    }
+    currentVersionString = versionString;
+    el.appendChild(document.createTextNode(versionString));
+
+    var current = parseVersionNumber(versionString);
+    if (!current || !latestVersion) return;
+
+    var pill = document.createElement('span');
+    pill.className = 'version-pill';
+    if (compareVersions(current, latestVersion) >= 0) {
+        pill.classList.add('version-pill-latest');
+        pill.textContent = 'you have the latest version';
+    } else {
+        pill.classList.add('version-pill-outdated');
+        pill.textContent = 'update available: ' + latestVersion.join('.');
+    }
+    el.appendChild(document.createTextNode(' '));
+    el.appendChild(pill);
+}
+
 function updateVersion() {
     cockpit.spawn(["cloudflared", "--version"])
         .done(function(versionOutput) {
-            var version = versionOutput.trim().split('\n')[0];
-            document.getElementById("version-info").textContent = version;
+            renderVersionDisplay(versionOutput.trim().split('\n')[0]);
+            setUpdateButtonMode(true);
         })
         .fail(function(err) {
-            document.getElementById("version-info").textContent = "Version unknown";
-            console.error("Failed to get cloudflared version:", err);
+            renderVersionDisplay(null);
+            setUpdateButtonMode(false);
+            console.warn("cloudflared --version failed; treating as not installed:", err);
+        });
+}
+
+// Fetches the latest cloudflared release tag from GitHub. Uses cockpit.spawn
+// of curl rather than browser fetch because the plugin CSP restricts
+// connect-src to 'self' — curl runs as a host process, outside that sandbox.
+function fetchLatestVersion() {
+    cockpit.spawn([
+        "curl", "-fsSL", "-m", "10",
+        "-H", "Accept: application/vnd.github+json",
+        "-H", "User-Agent: cockpit-cloudflared-plugin",
+        "https://api.github.com/repos/cloudflare/cloudflared/releases/latest"
+    ], { err: "message" })
+        .done(function(out) {
+            try {
+                var data = JSON.parse(out);
+                latestVersion = parseVersionNumber(data.tag_name || data.name || '');
+                // Re-render once the latest-version lookup resolves so the
+                // pill appears without the user needing to refresh.
+                if (currentVersionString) renderVersionDisplay(currentVersionString);
+            } catch (e) {
+                console.warn("Failed to parse latest release JSON:", e);
+            }
+        })
+        .fail(function(err) {
+            console.warn("Failed to fetch latest cloudflared version:", err);
         });
 }
 
@@ -478,6 +606,10 @@ function installTunnel() {
     var name = (nameInput.value || '').trim();
     var token = cleanToken(tokenInput.value);
 
+    if (!cloudflaredInstalled) {
+        setInstallProgress('danger', 'cloudflared is not installed on this host. Click "Install Cloudflared" in the top-right first.');
+        return;
+    }
     if (!/^[a-zA-Z0-9_-]{1,48}$/.test(name)) {
         setInstallProgress('danger', 'Name must be 1-48 characters: letters, digits, underscores, hyphens.');
         return;
@@ -622,6 +754,47 @@ function restartAllDiscoveredUnits(done) {
     });
 }
 
+// Fresh-install path: cloudflared isn't on the box yet. Downloads the
+// official binary for the host's architecture and drops it at
+// /usr/local/bin/cloudflared. No systemd service is touched — there's
+// nothing to restart.
+function installCloudflaredBinary() {
+    var btn = document.getElementById('update-btn');
+    btn.disabled = true;
+    btn.textContent = 'Installing...';
+
+    showNotification('Detecting architecture…', 'info');
+
+    detectArch(function(arch) {
+        showNotification('Downloading cloudflared (linux-' + arch + ')…', 'info');
+        downloadCloudflaredBinary(arch,
+            function() {
+                showNotification('cloudflared installed. You can now add a tunnel.', 'success');
+                setTimeout(function() {
+                    // Re-detect — on success this flips the button back to "Update".
+                    updateVersion();
+                    btn.disabled = false;
+                }, 1000);
+            },
+            function(err) {
+                showNotification('Install failed: ' + err, 'danger');
+                btn.disabled = false;
+                btn.textContent = 'Install Cloudflared';
+                console.error("Install failed:", err);
+            }
+        );
+    }, function(err) {
+        showNotification(String(err), 'danger');
+        btn.disabled = false;
+        btn.textContent = 'Install Cloudflared';
+    });
+}
+
+function handleUpdateButtonClick() {
+    if (cloudflaredInstalled) updateCloudflared();
+    else installCloudflaredBinary();
+}
+
 function updateCloudflared() {
     var btn = document.getElementById('update-btn');
     btn.disabled = true;
@@ -634,9 +807,24 @@ function updateCloudflared() {
     })
         .done(function() {
             showNotification('Updating via package manager...', 'info');
+            // Dispatch to whichever package manager this distro has. The
+            // --only-upgrade / upgrade semantics differ per tool, so each
+            // branch uses the idiomatic invocation.
             cockpit.spawn([
                 "bash", "-c",
-                "apt-get update && apt-get install --only-upgrade -y cloudflared"
+                "set -e; " +
+                "if command -v apt-get >/dev/null 2>&1; then " +
+                "  apt-get update && apt-get install --only-upgrade -y cloudflared; " +
+                "elif command -v dnf >/dev/null 2>&1; then " +
+                "  dnf upgrade -y cloudflared; " +
+                "elif command -v yum >/dev/null 2>&1; then " +
+                "  yum update -y cloudflared; " +
+                "elif command -v zypper >/dev/null 2>&1; then " +
+                "  zypper --non-interactive update cloudflared; " +
+                "else " +
+                "  echo 'No supported package manager (apt-get, dnf, yum, zypper) found' >&2; " +
+                "  exit 1; " +
+                "fi"
             ], { superuser: "require", err: "message" })
                 .done(function() {
                     showNotification('Updated successfully! Restarting tunnels...', 'success');
@@ -650,23 +838,26 @@ function updateCloudflared() {
                 });
         })
         .fail(function() {
-            showNotification('Downloading latest cloudflared binary...', 'info');
-            cockpit.spawn([
-                "bash", "-c",
-                "curl -L --output /tmp/cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 && " +
-                "chmod +x /tmp/cloudflared && " +
-                "cp /tmp/cloudflared /usr/local/bin/cloudflared"
-            ], { superuser: "require", err: "message" })
-                .done(function() {
-                    showNotification('Binary updated! Restarting tunnels...', 'success');
-                    restartAfterUpdate(btn);
-                })
-                .fail(function(err) {
-                    showNotification('Binary update failed: ' + err, 'danger');
-                    btn.disabled = false;
-                    btn.textContent = 'Update Cloudflared';
-                    console.error("Update failed:", err);
-                });
+            showNotification('Detecting architecture…', 'info');
+            detectArch(function(arch) {
+                showNotification('Downloading cloudflared (linux-' + arch + ')…', 'info');
+                downloadCloudflaredBinary(arch,
+                    function() {
+                        showNotification('Binary updated! Restarting tunnels...', 'success');
+                        restartAfterUpdate(btn);
+                    },
+                    function(err) {
+                        showNotification('Binary update failed: ' + err, 'danger');
+                        btn.disabled = false;
+                        btn.textContent = 'Update Cloudflared';
+                        console.error("Update failed:", err);
+                    }
+                );
+            }, function(err) {
+                showNotification(String(err), 'danger');
+                btn.disabled = false;
+                btn.textContent = 'Update Cloudflared';
+            });
         });
 }
 
@@ -769,9 +960,10 @@ function refreshAll() {
 
 window.addEventListener('load', function() {
     document.getElementById('refresh-btn').addEventListener('click', refreshAll);
-    document.getElementById('update-btn').addEventListener('click', updateCloudflared);
+    document.getElementById('update-btn').addEventListener('click', handleUpdateButtonClick);
 
     loadTokenPrefixes();
+    fetchLatestVersion();
     updateVersion();
 
     tunnelDiscovery.findTunnels(
